@@ -1,3 +1,6 @@
+/*
+  1.品牌管理
+*/
 import Vue from 'vue'
 
 // 引入专门的reset.css模块
@@ -49,7 +52,7 @@ Vue.component('CategorySelector', CategorySelector)
 Vue.prototype.$hasBP = hasBtnPermission
 Vue.prototype.$API = API
 Vue.prototype.$BASE_API = process.env.VUE_APP_BASE_API
-
+console.log(Vue.prototype.$BASE_API);
 // 引入mockjs的配置, 不使用
 /**
  * If you don't want to use mock-server

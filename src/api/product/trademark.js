@@ -49,4 +49,11 @@ export default {
       data
     })
   },
+  // 删除trademark
+  deleteTrademark(id) {
+    return request({
+      url: `${api_name}/remove/${id}`,
+      method: 'DELETE',
+    })
+  },
 }

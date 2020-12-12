@@ -58,7 +58,7 @@
       </el-form>
       <span slot="footer" class="dialog-footer">
         <el-button @click="isVisible = false">取 消</el-button>
-        <el-button type="primary" @click="validateAndAdd('ruleForm')"
+        <el-button type="primary" @click="dialogAck('ruleForm')"
           >确 定</el-button
         >
       </span>
@@ -77,7 +77,12 @@
      -->
 
     <!-- 表格 -->
-    <el-table :data="trademarkList" border style="width: 100%; margin: 30px 0" v-loading="isLoading">
+    <el-table
+      :data="trademarkList"
+      border
+      style="width: 100%; margin: 30px 0"
+      v-loading="isLoading"
+    >
       <!--
         序号使用数据在数组中的下标
        -->
@@ -97,7 +102,12 @@
             @click="updateTrademark(scope.row)"
             >修改</el-button
           >
-          <el-button type="danger" icon="el-icon-delete">删除</el-button>
+          <el-button
+            type="danger"
+            icon="el-icon-delete"
+            @click="delTrademark(scope.row.id)"
+            >删除</el-button
+          >
         </template>
       </el-table-column>
     </el-table>
@@ -141,6 +151,8 @@
         v-loading作为哪个元素的属性，loading遮罩就会被绑定到该元素的子节点上
       什么时候显示
         发送请求前显示，请求成功拿到数据后就不显示
+  8.删除
+
 */
 
 export default {
@@ -241,6 +253,29 @@ export default {
         点击确定的时候发送请求
       */
     },
+    // 修改按钮
+    updateTrademark(row) {
+      /*
+        出现弹窗
+        弹窗中要显示这一行的数据
+        再点击添加时为空
+        进行修改
+      */
+      // 清空上一次的校验结果
+      this.$refs.ruleForm && this.$refs.ruleForm.clearValidate();
+      this.isVisible = true;
+      this.ruleForm = { ...row };
+    },
+    // 删除按钮
+    async delTrademark(id) {
+      /*
+        发送请求删除
+        再重新发送请求渲染页面
+      */
+      //  console.log(id);
+      await this.$API.trademark.deleteTrademark(id);
+      this.myGetOneOfPage(this.page, this.limit);
+    },
     // 上传之后会来到这个函数
     handleAvatarSuccess(res, file) {
       console.log(res, file);
@@ -274,7 +309,7 @@ export default {
       return isType && isLt;
     },
     // 校验及进行请求
-    validateAndAdd(formName) {
+    dialogAck(formName) {
       /*
           在修改时，如果数据没有改就不需要发送请求；点击确定，就要发送修改的请求
           在添加时，是没有id的，在修改时会有id，根据id来确定是添加还是修改
@@ -289,7 +324,20 @@ export default {
             /*
             修改
               发送请求
+              如果没有修改数据，则不需要发送请求
            */
+            const findTrademark = this.trademarkList.find((trademark) => {
+              if (trademark.id === this.ruleForm.id) {
+                return true;
+              }
+            });
+            if (
+              findTrademark.tmName === this.ruleForm.tmName &&
+              findTrademark.logoUrl === this.ruleForm.logoUrl
+            ) {
+              this.$message.warning("数据没有被修改");
+              return;
+            }
             await this.$API.trademark.updateTrademark(this.ruleForm);
           } else {
             /*
@@ -306,20 +354,6 @@ export default {
           return false;
         }
       });
-    },
-    // 点击修改
-    updateTrademark(row, scope) {
-      /*
-        出现弹窗
-        弹窗中要显示这一行的数据
-        再点击添加时为空
-        进行修改
-      */
-      console.log(row, scope);
-      // 清空上一次的校验结果
-      this.$refs.ruleForm && this.$refs.ruleForm.clearValidate();
-      this.isVisible = true;
-      this.ruleForm = { ...row };
     },
   },
   mounted() {

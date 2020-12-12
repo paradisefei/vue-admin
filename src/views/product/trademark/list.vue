@@ -30,6 +30,11 @@
                 请求的这个地址是最终的服务器地址，还是跨域的问题没有搞得特别清楚，这里是属于代码中的请求，也就是客户端请求，那就得先搞清楚这个action的请求是不是Ajax请求了
               去哪请求
                 action
+                  优化一下这个action地址，因为这个是进行的Ajax请求，存在跨域问题
+                  有两种方式可以写
+                    直接写死，把最重要请求的地址写在这里，直接写死不是要写上完整的地址吗，为什么会404
+                      我请求的确实是最终的地址，你既然所有的基础路径都加了/dev-api，那你之前所有的请求都是加了的
+                      遇到/dev-api就把请求代理到http://182.92.128.115是不是就是意味着我只要路径中出现了/dev-api，就会在原来的基础上把/dev-api替换成http://182.92.128.115
            -->
           <el-upload
             class="avatar-uploader"
@@ -38,6 +43,9 @@
             :on-success="handleAvatarSuccess"
             :before-upload="beforeAvatarUpload"
           >
+            <!--
+            一开始ruleForm.logoUrl的空的，所以图片标签是隐藏的，加号和框都是i的功能，当上传了图片有地址了之后，图片标签就插入DOM树并显示图片了，那如果<el-upload></el-upload>中间啥元素都没有要如何触发上传呢
+           -->
             <img
               v-if="ruleForm.logoUrl"
               :src="ruleForm.logoUrl"
@@ -69,7 +77,7 @@
      -->
 
     <!-- 表格 -->
-    <el-table :data="trademarkList" border style="width: 100%; margin: 30px 0">
+    <el-table :data="trademarkList" border style="width: 100%; margin: 30px 0" v-loading="isLoading">
       <!--
         序号使用数据在数组中的下标
        -->
@@ -82,8 +90,13 @@
         </template>
       </el-table-column>
       <el-table-column prop="do" label="操作">
-        <template>
-          <el-button type="warning" icon="el-icon-edit">编辑</el-button>
+        <template v-slot="scope">
+          <el-button
+            type="warning"
+            icon="el-icon-edit"
+            @click="updateTrademark(scope.row)"
+            >修改</el-button
+          >
           <el-button type="danger" icon="el-icon-delete">删除</el-button>
         </template>
       </el-table-column>
@@ -118,6 +131,16 @@
     点击分页器的页码请求对应页的数据
   5.添加
     点击弹窗
+  6.修改
+    点击修改，出现弹窗
+    把上一次的校验结果清空
+  7.loading效果
+    在切换页码时会进行请求，这个请求的过程需要时间，在请求的这段时间内加上loading的效果
+    v-loading的指令，值为布尔值，为true时，表示显示loading效果；false时不显示，这里就有两个问题
+      在哪里显示
+        v-loading作为哪个元素的属性，loading遮罩就会被绑定到该元素的子节点上
+      什么时候显示
+        发送请求前显示，请求成功拿到数据后就不显示
 */
 
 export default {
@@ -149,11 +172,14 @@ export default {
         ],
         logoUrl: [{ required: true, message: "请上传品牌logo" }],
       },
+      // 是否显示遮罩-loading效果
+      isLoading: false,
     };
   },
   methods: {
     // 把请求某页数据的方法封装成函数
     async myGetOneOfPage(page, limit) {
+      this.isLoading = true;
       const { trademark } = this.$API;
       // 这个请求可以得到所有数据，数据的长度，但是我要渲染的是某一页的数据，可以直接请求某一页的数据
       // const resList = await trademark.getPageList();
@@ -172,6 +198,7 @@ export default {
       } else {
         this.$message.error("获取品牌数据列表失败");
       }
+      this.isLoading = false;
     },
     // 点击按钮获取对应页码的数据
     handleCurrentChange(newPage) {
@@ -195,7 +222,14 @@ export default {
     },
     // 添加按钮
     addTrademark() {
+      // 清空上一次的校验结果
+      this.$refs.ruleForm && this.$refs.ruleForm.clearValidate();
       this.isVisible = true;
+      this.ruleForm = {
+        tmName: "",
+        // 上传的图片地址
+        logoUrl: "",
+      };
 
       /*
         弹窗
@@ -241,10 +275,28 @@ export default {
     },
     // 校验及进行请求
     validateAndAdd(formName) {
+      /*
+          在修改时，如果数据没有改就不需要发送请求；点击确定，就要发送修改的请求
+          在添加时，是没有id的，在修改时会有id，根据id来确定是添加还是修改
+      */
       this.$refs[formName].validate(async (valid) => {
-        console.log(valid);
         if (valid) {
-          await this.$API.trademark.addTrademark(this.ruleForm);
+          /*
+            判断是否有id
+          */
+          const isUpdate = this.ruleForm.id;
+          if (isUpdate) {
+            /*
+            修改
+              发送请求
+           */
+            await this.$API.trademark.updateTrademark(this.ruleForm);
+          } else {
+            /*
+              添加
+           */
+            await this.$API.trademark.addTrademark(this.ruleForm);
+          }
           // 添加完之后对话框隐藏
           this.isVisible = false;
           // 再请求数据重新渲染页面
@@ -254,6 +306,20 @@ export default {
           return false;
         }
       });
+    },
+    // 点击修改
+    updateTrademark(row, scope) {
+      /*
+        出现弹窗
+        弹窗中要显示这一行的数据
+        再点击添加时为空
+        进行修改
+      */
+      console.log(row, scope);
+      // 清空上一次的校验结果
+      this.$refs.ruleForm && this.$refs.ruleForm.clearValidate();
+      this.isVisible = true;
+      this.ruleForm = { ...row };
     },
   },
   mounted() {

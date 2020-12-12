@@ -25,14 +25,27 @@ export default {
   },
   // 添加trademark
   addTrademark(data) {
-     /*
-        需要参数数据
-          logoUrl
-          tmName
-     */
+    /*
+       需要参数数据
+         logoUrl
+         tmName
+    */
     return request({
       url: `${api_name}/save`,
       method: 'POST',
+      data
+    })
+  },
+  // 修改trademark
+  updateTrademark(data) {
+    /*
+       需要参数数据
+         logoUrl
+         tmName
+    */
+    return request({
+      url: `${api_name}/update`,
+      method: 'PUT',
       data
     })
   },

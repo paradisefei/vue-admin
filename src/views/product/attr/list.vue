@@ -1,56 +1,6 @@
 <template>
   <div>
-    <el-card class="box-card">
-      <b>一级分类</b>
-      <el-select
-        v-model="categoryId.category1Id"
-        placeholder="请选择"
-        @change="handleCategory1"
-      >
-        <el-option
-          v-for="c1 in categoryList.category1List"
-          :key="c1.id"
-          :label="c1.name"
-          :value="c1.id"
-        >
-          <!--
-          change
-            事件
-            修改el-select值得时候，会触发change事件
-         -->
-        </el-option>
-      </el-select>
-
-      <b>二级分类</b>
-      <el-select
-        v-model="categoryId.category2Id"
-        placeholder="请选择"
-        @change="handleCategory2"
-      >
-        <el-option
-          v-for="c2 in categoryList.category2List"
-          :key="c2.id"
-          :label="c2.name"
-          :value="c2.id"
-        >
-        </el-option>
-      </el-select>
-
-      <b>三级分类</b>
-      <el-select
-        v-model="categoryId.category3Id"
-        placeholder="请选择"
-        @change="handleCategory3"
-      >
-        <el-option
-          v-for="c3 in categoryList.category3List"
-          :key="c3.id"
-          :label="c3.name"
-          :value="c3.id"
-        >
-        </el-option>
-      </el-select>
-    </el-card>
+    <Category @fromCategory="fromCategory"></Category>
 
     <el-card class="box-card" v-show="isShowModify">
       <el-button
@@ -90,7 +40,7 @@
                 type="primary"
                 icon="el-icon-edit"
                 size="mini"
-                @click="modifyAttr(row.id, row.attrName)"
+                @click="modifyAttr(row)"
               ></el-button>
             </el-tooltip>
 
@@ -161,7 +111,7 @@
               @keyup.enter.native="loseFocus(row, $index)"
               v-model="row.valueName"
             />
-            <div v-else @click="toEditable(row, row.valueName, row.attrId)">
+            <div v-else @click="toEditable(row)">
               {{ row.valueName }}
             </div>
           </template>
@@ -211,18 +161,13 @@
       点击修改属性按钮，来到切换入一个新的组件
 */
 import Vue from "vue";
+import Category from "./category";
 import { tooltip } from "element-ui";
 Vue.use(tooltip);
 export default {
   name: "AttrList",
   data() {
     return {
-      categoryList: {
-        // 一级分类列表的数据
-        category1List: [],
-        category2List: [],
-        category3List: [],
-      },
       categoryId: {
         // 一级分类某项得id
         category1Id: "",
@@ -233,10 +178,8 @@ export default {
       attrInfoList: [],
       attrId: "",
       attrValueList: [],
-      // 添加属性按钮
+      // 点击添加属性按钮
       attrValue: {},
-      // 是否禁用添加属性按钮
-      isAddAttr: true,
       // 点击修改属性
       isShowModify: true,
       // 属性名输入框
@@ -245,10 +188,30 @@ export default {
       valueNameText: "",
     };
   },
+  computed: {
+    // 是否禁用添加属性按钮
+    isAddAttr() {
+      return !this.categoryId.category3Id;
+    },
+  },
+  components: {
+    Category,
+  },
   methods: {
+    // 从Category属性列表数据
+    fromCategory(attrInfoList, categoryId) {
+      this.attrInfoList = attrInfoList;
+      this.categoryId = categoryId;
+    },
     // 点击删除属性
     async delAttr(row) {
-      await this.$API.attr.deleteAttr(row.id);
+      if (this.$confirm("确定删除吗？")) {
+        await this.$API.attr.deleteAttr(row.id);
+        this.myGetAttrInfo();
+      }
+    },
+    // 自己封装的请求属性信息的函数
+    async myGetAttrInfo() {
       const res = await this.$API.attr.getAttrInfoList(this.categoryId);
       if (res.code === 200) {
         this.$message.success("成功");
@@ -268,6 +231,7 @@ export default {
     },
     // 点击添加属性(不是属性值，而是属性)
     addAttr() {
+      this.attrId = "";
       this.attrNameText = "";
       this.attrValueList = [];
       this.isShowModify = false;
@@ -293,17 +257,16 @@ export default {
         categoryLevel: 3, // 分类级别
         id: this.attrId,
       };
+
+      if (!this.attrNameText || !this.attrValueList.length) {
+        this.$message.error("属性名或属性值列表不能为空");
+        return;
+      }
       const res1 = await this.$API.attr.saveAttrInfo(this.attrValue);
       if (res1.code === 200) {
         this.$message.success("保存成功");
         this.isShowModify = true;
-      } else {
-        this.$message.error("数据获取失败");
-      }
-
-      const res2 = await this.$API.attr.getAttrInfoList(this.categoryId);
-      if (res2.code === 200) {
-        this.attrInfoList = res2.data;
+        this.myGetAttrInfo();
       } else {
         this.$message.error("数据获取失败");
       }
@@ -331,7 +294,7 @@ export default {
       }
       row.edit = false;
     },
-    // 在有属性名的组件中添加属性
+    // 在有属性名的组件中添加属性值
     addNewAttr() {
       /*
         1.点击，在attrValueList中添加一条数据
@@ -344,7 +307,8 @@ export default {
       });
     },
     // 点击切换编辑模式
-    toEditable(row, valueName, attrId) {
+    // toEditable(row, valueName, attrId) {
+    toEditable(attrValue) {
       /*
         1.在row身上添加一个edit属性，并且是响应式的
         2.变成文本框是获取焦点
@@ -352,25 +316,25 @@ export default {
         4.进入编辑模式时，文本框的内容和原本的文本内容相同
         5.收集属性id
       */
-      this.attrId = attrId;
-      this.$set(row, "edit", true);
+      this.attrId = attrValue.attrId;
+      this.$set(attrValue, "edit", true);
       this.$nextTick(() => {
         this.$refs.input.focus();
       });
-      this.valueNameText = valueName;
+      this.valueNameText = attrValue.valueName;
     },
     // 点击修改属性
-    async modifyAttr(id, name) {
+    async modifyAttr(attr) {
       /*
         1.把属性名放入文本框中，属性值列表展示在表格中。
           1.发送请求，获取属性值列表
           2.拿到属性id
         2.点击valueName这个框时，变成可编辑的模式
       */
-      this.attrId = id;
+      this.attrId = attr.id;
       this.isShowModify = false;
-      this.attrNameText = name;
-      const res = await this.$API.attr.getAttrValueList(id);
+      this.attrNameText = attr.attrName;
+      const res = await this.$API.attr.getAttrValueList(attr.id);
       if (res.code === 200) {
         this.$message.success("数据获取成功");
         this.attrValueList = res.data;
@@ -378,70 +342,10 @@ export default {
         this.$message.error("数据获取失败");
       }
     },
-    // 点击一级分类列表，获取二级分类列表数据
-    async handleCategory1(id) {
-      /*
-        把一级分类列表中的id传进来
-        拿到id发请求
-        先把后面得都清空
-      */
-      this.categoryId.category2Id = "";
-      this.categoryId.category3Id = "";
-      const res = await this.$API.attr.getCategory2List(id);
-      if (res.code === 200) {
-        this.categoryList.category2List = res.data;
-      } else {
-        this.$message.error("数据获取失败");
-      }
-    },
-    // 点击二级分类列表，获取三级分类列表数据
-    async handleCategory2(id) {
-      /*
-        把二级分类列表中的id传进来
-        拿到id发请求
-      */
-      this.categoryId.category3Id = "";
-      const res = await this.$API.attr.getCategory3List(id);
-      if (res.code === 200) {
-        this.categoryList.category3List = res.data;
-      } else {
-        this.$message.error("数据获取失败");
-      }
-    },
-    // 点击三级分类列表，获取属性信息
-    async handleCategory3() {
-      /*
-        发送请求
-        接触添加属性按钮的禁用
-      */
-      this.isAddAttr = false;
-      const res = await this.$API.attr.getAttrInfoList(this.categoryId);
-      if (res.code === 200) {
-        this.attrInfoList = res.data;
-      } else {
-        this.$message.error("数据获取失败");
-      }
-    },
-  },
-  async mounted() {
-    /*
-      这里得到的返回值并不是最终需要动态渲染的数据
-    */
-    const res = await this.$API.attr.getCategory1List();
-    if (res.code === 200) {
-      this.$message.success("数据获取成功");
-      this.categoryList.category1List = res.data;
-    } else {
-      this.$message.error("数据获取失败");
-    }
   },
 };
 </script>
 <style>
-.box-card {
-  margin-bottom: 10px;
-  padding: 10px 0;
-}
 .elButton {
   width: 100%;
   margin: 20px 0;

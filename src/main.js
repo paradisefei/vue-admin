@@ -1,5 +1,6 @@
 /*
   1.品牌管理
+  2.平台属性管理
 */
 import Vue from 'vue'
 

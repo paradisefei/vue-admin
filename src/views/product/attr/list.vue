@@ -1,6 +1,6 @@
 <template>
   <div>
-    <Category @fromCategory="fromCategory"></Category>
+    <Category @fromCategory="fromCategory" :disableSelect="isShowModify"></Category>
 
     <el-card class="box-card" v-show="isShowModify">
       <el-button
@@ -44,19 +44,14 @@
               ></el-button>
             </el-tooltip>
 
-            <el-tooltip
-              effect="light"
-              content="删除属性"
-              placement="bottom"
-              popper-class="atooltip"
-            >
+            <el-popconfirm title="确定删除吗？" @onConfirm="delAttr(row)">
               <el-button
                 type="danger"
                 icon="el-icon-delete"
+                slot="reference"
                 size="mini"
-                @click.native="delAttr(row)"
               ></el-button>
-            </el-tooltip>
+            </el-popconfirm>
           </template>
         </el-table-column>
       </el-table>
@@ -118,19 +113,14 @@
         </el-table-column>
         <el-table-column label="操作">
           <template v-slot="{ row }">
-            <el-tooltip
-              effect="light"
-              content="删除属性"
-              placement="bottom"
-              popper-class="atooltip"
-            >
+            <el-popconfirm title="确定删除吗？" @onConfirm="delAttrValue(row)">
               <el-button
                 type="danger"
                 icon="el-icon-delete"
                 size="mini"
-                @click.native="delAttrValue(row)"
+                slot="reference"
               ></el-button>
-            </el-tooltip>
+            </el-popconfirm>
           </template>
         </el-table-column>
       </el-table>
@@ -159,6 +149,8 @@
       3.点击了三级分类列表，把属性渲染在下面得表格中
     修改属性
       点击修改属性按钮，来到切换入一个新的组件
+    当渲染修改属性时，就将分类下拉框禁用
+      1.修改组件是否渲染isShowModify为false时，禁用下拉框
 */
 import Vue from "vue";
 import Category from "./category";
@@ -200,15 +192,16 @@ export default {
   methods: {
     // 从Category属性列表数据
     fromCategory(attrInfoList, categoryId) {
+      if (!attrInfoList.length) {
+        this.isShowModify = true;
+      }
       this.attrInfoList = attrInfoList;
       this.categoryId = categoryId;
     },
     // 点击删除属性
     async delAttr(row) {
-      if (this.$confirm("确定删除吗？")) {
-        await this.$API.attr.deleteAttr(row.id);
-        this.myGetAttrInfo();
-      }
+      await this.$API.attr.deleteAttr(row.id);
+      this.myGetAttrInfo();
     },
     // 自己封装的请求属性信息的函数
     async myGetAttrInfo() {

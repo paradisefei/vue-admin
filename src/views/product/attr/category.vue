@@ -6,6 +6,7 @@
         v-model="categoryId.category1Id"
         placeholder="请选择"
         @change="handleCategory1"
+        :disabled="!disableSelect"
       >
         <el-option
           v-for="c1 in categoryList.category1List"
@@ -26,6 +27,7 @@
         v-model="categoryId.category2Id"
         placeholder="请选择"
         @change="handleCategory2"
+        :disabled="!disableSelect"
       >
         <el-option
           v-for="c2 in categoryList.category2List"
@@ -41,6 +43,7 @@
         v-model="categoryId.category3Id"
         placeholder="请选择"
         @change="handleCategory3"
+        :disabled="!disableSelect"
       >
         <el-option
           v-for="c3 in categoryList.category3List"
@@ -88,6 +91,7 @@ export default {
       },
     };
   },
+  props: ["disableSelect"],
   methods: {
     // 点击一级分类列表，获取二级分类列表数据
     async handleCategory1(id) {
@@ -95,6 +99,7 @@ export default {
         把一级分类列表中的id传进来
         拿到id发请求
         先把后面得都清空
+        如果下面是在添加属性界面的话，要回到属性列表
       */
       this.categoryId.category2Id = "";
       this.categoryId.category3Id = "";
@@ -141,7 +146,7 @@ export default {
     /*
       这里得到的返回值并不是最终需要动态渲染的数据
     */
-   this.$emit("fromCategory", [], {});
+    this.$emit("fromCategory", [], {});
     const res = await this.$API.attr.getCategory1List();
     if (res.code === 200) {
       this.$message.success("数据获取成功");

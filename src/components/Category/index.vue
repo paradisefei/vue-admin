@@ -136,6 +136,7 @@ export default {
       */
       const res = await this.$API.attr.getAttrInfoList(this.categoryId);
       if (res.code === 200) {
+        this.$message.success("三级分类列表数据获取成功");
         this.$emit("fromCategory", res.data, this.categoryId);
       } else {
         this.$message.error("数据获取失败");
@@ -149,7 +150,7 @@ export default {
     this.$emit("fromCategory", [], {});
     const res = await this.$API.attr.getCategory1List();
     if (res.code === 200) {
-      this.$message.success("数据获取成功");
+      this.$message.success("一级分类列表数据获取成功");
       this.categoryList.category1List = res.data;
     } else {
       this.$message.error("数据获取失败");

@@ -1,6 +1,9 @@
 <template>
   <div>
-    <Category @fromCategory="fromCategory" :disableSelect="isShowModify"></Category>
+    <Category
+      @fromCategory="fromCategory"
+      :disableSelect="isShowModify"
+    ></Category>
 
     <el-card class="box-card" v-show="isShowModify">
       <el-button
@@ -153,7 +156,7 @@
       1.修改组件是否渲染isShowModify为false时，禁用下拉框
 */
 import Vue from "vue";
-import Category from "./category";
+import Category from "@/components/Category";
 import { tooltip } from "element-ui";
 Vue.use(tooltip);
 export default {

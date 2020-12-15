@@ -104,7 +104,7 @@ export default {
       this.categoryId.category2Id = "";
       this.categoryId.category3Id = "";
       this.categoryList.category3List = [];
-      this.$emit("fromCategory", [], {});
+      this.$bus.$emit("fromCategory", [], {});
       const res = await this.$API.attr.getCategory2List(id);
       if (res.code === 200) {
         this.categoryList.category2List = res.data;
@@ -119,7 +119,7 @@ export default {
         拿到id发请求
       */
       this.categoryId.category3Id = "";
-      this.$emit("fromCategory", [], {});
+      this.$bus.$emit("fromCategory", [], {});
       const res = await this.$API.attr.getCategory3List(id);
       if (res.code === 200) {
         this.categoryList.category3List = res.data;
@@ -136,8 +136,8 @@ export default {
       */
       const res = await this.$API.attr.getAttrInfoList(this.categoryId);
       if (res.code === 200) {
-        this.$message.success("三级分类列表数据获取成功");
-        this.$emit("fromCategory", res.data, this.categoryId);
+        this.$bus.$emit("fromCategory", res.data, this.categoryId);
+        this.$bus.$emit("deliverCategoryId", this.categoryId);
       } else {
         this.$message.error("数据获取失败");
       }
@@ -147,7 +147,7 @@ export default {
     /*
       这里得到的返回值并不是最终需要动态渲染的数据
     */
-    this.$emit("fromCategory", [], {});
+    this.$bus.$emit("fromCategory", [], {});
     const res = await this.$API.attr.getCategory1List();
     if (res.code === 200) {
       this.$message.success("一级分类列表数据获取成功");

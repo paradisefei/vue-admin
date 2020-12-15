@@ -37,4 +37,29 @@ export default {
       method: 'GET',
     })
   },
+  // 获取基础销售属性列表
+  getBaseSaleAttrList() {
+    return request({
+      url: `${api_name}/baseSaleAttrList`,
+      method: 'GET',
+    })
+  },
+  // 保存
+  saveSpuInfo(data) {
+    // console.log(data);
+    return request({
+      url: `${api_name}/saveSpuInfo`,
+      method: 'POST',
+      data,
+    })
+  },
+  // 更新
+  updateSpuInfo(data) {
+    // console.log(data);
+    return request({
+      url: `${api_name}/updateSpuInfo`,
+      method: 'POST',
+      data,
+    })
+  },
 }

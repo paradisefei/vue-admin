@@ -74,6 +74,9 @@ Vue.prototype.$BASE_API = process.env.VUE_APP_BASE_API
 Vue.config.productionTip = false
 
 new Vue({
+  beforeCreate() {
+    Vue.prototype.$bus = this;
+  },
   el: '#app',
   router,
   store,

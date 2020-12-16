@@ -231,17 +231,22 @@ export default {
           });
           const data = {
             ...this.eachSpuInfo,
+            category3Id: this.categoryId.category3Id,
             spuImageList,
             spuSaleAttrList: this.spuAttrValueListInTable,
           };
+          // return;
           if (data.id) {
             // 有id就是更新
+            console.log("更新");
             await this.$API.spu.updateSpuInfo(data);
           } else {
+            console.log("添加");
             await this.$API.spu.saveSpuInfo(data);
           }
-          this.eachSpuInfoProps.id = undefined;
-          this.$emit("cancelSave", this.eachSpuInfoProps, this.categoryId);
+          this.$bus.$emit("toggle", true);
+          this.$emit("cancelSave", [], this.categoryId);
+          this.eachSpuInfo = {};
         }
       });
     },
@@ -377,8 +382,10 @@ export default {
         3.所有spu信息仍要渲染在allSpu组件中
           1.重新挂载，所有又会变成空数组；重新挂载时allSpu信息要保留
       */
-      this.eachSpuInfoProps.id = undefined;
-      this.$emit("cancelSave", this.eachSpuInfoProps, this.categoryId);
+      // this.eachSpuInfoProps.id = undefined;
+      this.$bus.$emit("toggle", true);
+      this.$emit("cancelSave", [], this.categoryId);
+      this.eachSpuInfo = {};
     },
     // 上传图片
     handleRemove(res, file, fileList) {
@@ -471,12 +478,15 @@ export default {
   },
   async mounted() {
     /*
-      获取这个spu下的所有销售属性
+      1.获取这个spu下的所有销售属性
+      2.如果是添加的话就不需要请求图片和所有属性值
     */
     await this.myGetAllTrademarkList();
-    await this.myGetSpuImageList();
     await this.myGetBaseSaleAttrList();
-    await this.myGetSpuSaleAttrList();
+    if (this.eachSpuInfo.id) {
+      await this.myGetSpuImageList();
+      await this.myGetSpuSaleAttrList();
+    }
   },
 };
 </script>

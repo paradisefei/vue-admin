@@ -1,6 +1,10 @@
 <template>
   <el-card class="box-card">
-    <el-button type="primary" icon="el-icon-plus" :disabled="isDisableAddSpu"
+    <el-button
+      type="primary"
+      icon="el-icon-plus"
+      :disabled="isDisableAddSpu"
+      @click="addSPU"
       >添加SPU</el-button
     >
     <el-table :data="allSpuInfoList" border class="elButton">
@@ -114,6 +118,15 @@ export default {
     },
   },
   methods: {
+    // 点击添加SPU
+    addSPU() {
+      /*
+        1.要显示eachSpu组件，点击修改isShowAddSpu的值
+        2.eachSpu组件置为空
+       */
+      this.$emit("fromAS", {});
+      this.$bus.$emit("toggle", false);
+    },
     //　点击修改spu
     async modifySpu(row) {
       /*
@@ -134,6 +147,7 @@ export default {
       */
       // this.isShowAddSpu = false;
       this.$emit("fromAS", row);
+      this.$bus.$emit("toggle", false);
     },
     handleSizeChange(size) {
       this.myGetAllSpuInfoList({
@@ -175,7 +189,7 @@ export default {
         5.获取到和分页器相关的数据
         6.获取到三级分类数据时，接触按钮禁用
       */
-      // this.allSpuInfoList = allSpuInfoList;
+      this.allSpuInfoList = allSpuInfoList;
       if (!Object.keys(categoryId).length) return;
       const { current, size } = this;
       this.categoryId = categoryId;
@@ -191,7 +205,7 @@ export default {
     // 绑定事件
     this.$bus.$on("fromCategory", this.fromCategory);
   },
-  beforeDestory() {
+  beforeDestroy() {
     this.$bus.$off("fromCategory", this.fromCategory);
   },
 };

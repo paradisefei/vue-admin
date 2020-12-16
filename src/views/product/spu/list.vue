@@ -53,16 +53,17 @@ export default {
       attrInfoList: [],
       // 销售属性中选择的某个属性
       checkSpuAttrValue: "",
+      isShowAddSpu: true,
     };
   },
   computed: {
     // 两个组件间切换显示隐藏
-    isShowAddSpu() {
-      /*
-        1.如果eachSpuInfo身上有id了，说明点击了修改属性，所以这里使用计算属性
-      */
-      return !this.eachSpuInfo.id;
-    },
+    // isShowAddSpu() {
+    //   /*
+    //     1.如果eachSpuInfo身上有id了，说明点击了修改属性，所以这里使用计算属性
+    //   */
+    //   return !this.eachSpuInfo.id;
+    // },
   },
   methods: {
     // 定义自定义事件获取从allSpu中传来的eachSpuInfo数据
@@ -76,7 +77,6 @@ export default {
         2.触发全局事件总线上请求数据的方法
       */
       this.eachSpuInfo = eachSpuInfo;
-      console.log(this.eachSpuInfo);
       this.$nextTick(() => {
         /*
           1.在这里触发获取所有spu信息的方法
@@ -91,6 +91,10 @@ export default {
     deliverCategoryId(categoryId) {
       this.categoryId = categoryId;
     },
+    // 修改isShowAddSpu的值，切换组件
+    toggle(boolean) {
+      this.isShowAddSpu = boolean;
+    }
   },
   components: {
     Category,
@@ -101,9 +105,12 @@ export default {
     // 绑定事件传递categoryId
     // 当点击了三级分类列表时，触发该事件把数据传过来
     this.$bus.$on("deliverCategoryId", this.deliverCategoryId);
+    // 绑定一个修改isShowAddSpu值的函数
+    this.$bus.$on("toggle", this.toggle);
   },
-  beforeDestory() {
+  beforeDestroy() {
     this.$bus.$off("deliverCategoryId", this.deliverCategoryId);
+    this.$bus.$off("toggle", this.toggle);
   },
 };
 </script>

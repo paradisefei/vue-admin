@@ -21,13 +21,14 @@
           <el-tooltip
             popper-class="atooltip"
             effect="light"
-            content="添加SPU"
+            content="添加SKU"
             placement="bottom"
           >
             <el-button
               type="primary"
               icon="el-icon-plus"
               size="mini"
+              @click="addSku(row)"
             ></el-button>
           </el-tooltip>
           <el-tooltip
@@ -91,17 +92,22 @@
     1.点击修改属性，渲染eachSpuInfo组件，在这里使用v-if，使用v-if会有写在和挂载的过程，使用v-show就一直是挂载的，那既然是有卸载的就不能直接传数据了，而需要把数据放到父组件中
     2.要把这一行的信息传到eachSpuInfo组件中
 */
+import { mapState } from "vuex";
 export default {
   name: "AllSpu",
   data() {
     return {
       allSpuInfoList: [],
-      categoryId: {
-        // 一级分类某项得id
-        category1Id: "",
-        category2Id: "",
-        category3Id: "",
-      },
+      // categoryId: {
+      //   // 一级分类某项得id
+      //   category1Id: "",
+      //   category2Id: "",
+      //   category3Id: "",
+      // },
+      // categoryId: {
+      //   category3Id: "",
+      //   ...this.categoryIdProps,
+      // },
       size: 3,
       current: 1,
       total: 0,
@@ -111,13 +117,48 @@ export default {
       },
     };
   },
+  // props: {
+  //   categoryIdProps: {
+  //     type: Object,
+  //   },
+  // },
   computed: {
     // 是否禁用添加SPU按钮
     isDisableAddSpu() {
       return !this.categoryId.category3Id;
     },
+    ...mapState({
+      categoryList: (state) => state.category.categoryList,
+      categoryId: (state) => state.category.categoryId,
+    }),
+  },
+  watch: {
+    "categoryId.category3Id"() {
+      /*
+        1.监视到3级id发生变化时就发送请求
+          1.首先是要有
+      */
+      if (!this.categoryId.category3Id) {
+        this.allSpuInfoList = [];
+        return;
+      }
+      const { current, size, categoryId } = this;
+      this.myGetAllSpuInfoList({
+        current,
+        size,
+        category3Id: this.categoryId.category3Id,
+      });
+    },
   },
   methods: {
+    // 点击添加SKU
+    addSku(row) {
+      /*
+        1.切换显示隐藏
+      */
+      this.$emit("fromAS", row);
+      this.$bus.$emit("toggleAddSKU", false);
+    },
     // 点击添加SPU
     addSPU() {
       /*
@@ -125,7 +166,7 @@ export default {
         2.eachSpu组件置为空
        */
       this.$emit("fromAS", {});
-      this.$bus.$emit("toggle", false);
+      this.$bus.$emit("toggleAddSPU", false);
     },
     //　点击修改spu
     async modifySpu(row) {
@@ -147,7 +188,7 @@ export default {
       */
       // this.isShowAddSpu = false;
       this.$emit("fromAS", row);
-      this.$bus.$emit("toggle", false);
+      this.$bus.$emit("toggleAddSPU", false);
     },
     handleSizeChange(size) {
       this.myGetAllSpuInfoList({
@@ -179,31 +220,17 @@ export default {
         this.$message.error("数据获取失败");
       }
     },
-    fromCategory(allSpuInfoList, categoryId) {
-      // category获取到三级列表id时，触发事件
-      /*
-        1.获取到所有的spu列表数据
-        2.触发时会传入两个数据
-        3.还要把id都传过来
-        4.获取到数据把数据渲染到组件中
-        5.获取到和分页器相关的数据
-        6.获取到三级分类数据时，接触按钮禁用
-      */
-      this.allSpuInfoList = allSpuInfoList;
-      if (!Object.keys(categoryId).length) return;
-      const { current, size } = this;
-      this.categoryId = categoryId;
-      const category3Id = categoryId.category3Id;
-      this.myGetAllSpuInfoList({
-        current,
-        size,
-        category3Id,
-      });
-    },
   },
   mounted() {
     // 绑定事件
-    this.$bus.$on("fromCategory", this.fromCategory);
+    //从eachSpu跳到这个页面时，要重新请求
+    // this.$bus.$on("fromCategory", this.fromCategory);
+    const { current, size, categoryId } = this;
+    this.myGetAllSpuInfoList({
+      current,
+      size,
+      category3Id: this.categoryId.category3Id,
+    });
   },
   beforeDestroy() {
     this.$bus.$off("fromCategory", this.fromCategory);

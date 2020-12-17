@@ -46,7 +46,7 @@ export default {
   },
   // 保存
   saveSpuInfo(data) {
-    console.log(data);
+    // console.log(data);
     return request({
       url: `${api_name}/saveSpuInfo`,
       method: 'POST',

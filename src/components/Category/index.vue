@@ -72,27 +72,32 @@
       3.点击了三级分类列表，把属性渲染在下面得表格中
     修改属性
       点击修改属性按钮，来到切换入一个新的组件
+
+  vuex管理数据
+    1.触发action函数执行
+      1.还没有请求到数据前渲染页面的话没有数据，会出现undefined
+      2.修改vuex中categoryId的值
+      3.获取二级分类列表数据
+      4.点击二级分类列表，获取三级分类列表数据
+      5.点击三级分类项，获取所有spu信息
 */
+import { mapActions, mapState } from "vuex";
 export default {
   name: "AttrList",
-  data() {
-    return {
-      categoryList: {
-        // 一级分类列表的数据
-        category1List: [],
-        category2List: [],
-        category3List: [],
-      },
-      categoryId: {
-        // 一级分类某项得id
-        category1Id: "",
-        category2Id: "",
-        category3Id: "",
-      },
-    };
+  computed: {
+    ...mapState({
+      categoryList: (state) => state.category.categoryList,
+      categoryId: (state) => state.category.categoryId,
+    }),
   },
   props: ["disableSelect"],
   methods: {
+    // 引入action函数
+    ...mapActions([
+      "getCategory1ListAction",
+      "getCategory2ListAction",
+      "getCategory3ListAction",
+    ]),
     // 点击一级分类列表，获取二级分类列表数据
     async handleCategory1(id) {
       /*
@@ -100,61 +105,38 @@ export default {
         拿到id发请求
         先把后面得都清空
         如果下面是在添加属性界面的话，要回到属性列表
+
+        1.修改vuex中的数据
+          1.把修改vuex中的一级id
+          2.每次点击一级分类列表，都需要把二级，三级分类列表清空
       */
-      this.categoryId.category2Id = "";
-      this.categoryId.category3Id = "";
-      this.categoryList.category3List = [];
-      this.$bus.$emit("fromCategory", [], {});
-      const res = await this.$API.attr.getCategory2List(id);
-      if (res.code === 200) {
-        this.categoryList.category2List = res.data;
-      } else {
-        this.$message.error("数据获取失败");
-      }
+      this.getCategory2ListAction(id);
     },
     // 点击二级分类列表，获取三级分类列表数据
-    async handleCategory2(id) {
+    handleCategory2(id) {
       /*
         把二级分类列表中的id传进来
         拿到id发请求
       */
-      this.categoryId.category3Id = "";
-      this.$bus.$emit("fromCategory", [], {});
-      const res = await this.$API.attr.getCategory3List(id);
-      if (res.code === 200) {
-        this.categoryList.category3List = res.data;
-      } else {
-        this.$message.error("数据获取失败");
-      }
+      this.getCategory3ListAction(id);
     },
     // 点击三级分类列表，获取属性信息
-    async handleCategory3() {
+    handleCategory3() {
       /*
         1.发送请求
         2.接触添加属性按钮的禁用
         3.把请求到的三级数据传入到父组件
+
+        1.发送请求，获取所有spu数据
       */
-      const res = await this.$API.attr.getAttrInfoList(this.categoryId);
-      if (res.code === 200) {
-        this.$bus.$emit("fromCategory", res.data, this.categoryId);
-        this.$bus.$emit("deliverCategoryId", this.categoryId);
-      } else {
-        this.$message.error("数据获取失败");
-      }
+      console.log(this.categoryId);
     },
   },
   async mounted() {
     /*
       这里得到的返回值并不是最终需要动态渲染的数据
     */
-    this.$bus.$emit("fromCategory", [], {});
-    const res = await this.$API.attr.getCategory1List();
-    if (res.code === 200) {
-      this.$message.success("一级分类列表数据获取成功");
-      this.categoryList.category1List = res.data;
-    } else {
-      this.$message.error("数据获取失败");
-    }
+    this.getCategory1ListAction();
   },
 };
 </script>

@@ -1,15 +1,17 @@
 <template>
   <div>
-    <Category :disableSelect="isShowAddSpu"></Category>
+    <div v-if="isShowAddSku">
+      <Category :disableSelect="isShowAddSpu"></Category>
 
-    <AllSpu v-if="isShowAddSpu" @fromAS="fromAS_EachSpuInfo"> </AllSpu>
+      <AllSpu v-if="isShowAddSpu" @fromAS="fromAS_EachSpuInfo"> </AllSpu>
 
-    <EachSpu
-      v-else
-      :eachSpuInfoProps="eachSpuInfo"
-      @cancelSave="cancelSave"
-      :categoryId="categoryId"
-    ></EachSpu>
+      <EachSpu
+        v-else
+        :eachSpuInfoProps="eachSpuInfo"
+        @cancelSave="cancelSave"
+      ></EachSpu>
+    </div>
+    <AddSku v-else :eachSpuInfoProps="eachSpuInfo"></AddSku>
   </div>
 </template>
 
@@ -29,13 +31,16 @@
   4.拆分组件
     1.显示所有SPU的组件
   5.绑定自定义事件接收从AllSpu组件中过来的eachSpuInfo信息
+  6.显示添加sku组件时其它组件都隐藏
+  7.使用vuex管理categoryId和categoryList的数据
+    1.在Category组件中请求的时候就把id和list的数据保存到vuex中
 */
 import Vue from "vue";
 import Category from "@/components/Category";
 import AllSpu from "./allSpu";
 import EachSpu from "./eachSpu";
-import { tooltip } from "element-ui";
-Vue.use(tooltip);
+import AddSku from "./addSku";
+
 export default {
   name: "SpuList",
   data() {
@@ -54,16 +59,9 @@ export default {
       // 销售属性中选择的某个属性
       checkSpuAttrValue: "",
       isShowAddSpu: true,
+      isShowAddSku: true,
+      // isShowAddSku: false,
     };
-  },
-  computed: {
-    // 两个组件间切换显示隐藏
-    // isShowAddSpu() {
-    //   /*
-    //     1.如果eachSpuInfo身上有id了，说明点击了修改属性，所以这里使用计算属性
-    //   */
-    //   return !this.eachSpuInfo.id;
-    // },
   },
   methods: {
     // 定义自定义事件获取从allSpu中传来的eachSpuInfo数据
@@ -88,29 +86,30 @@ export default {
         this.$bus.$emit("fromCategory", eachSpuInfo, categoryId);
       });
     },
-    deliverCategoryId(categoryId) {
-      this.categoryId = categoryId;
-    },
     // 修改isShowAddSpu的值，切换组件
-    toggle(boolean) {
+    toggleAddSPU(boolean) {
       this.isShowAddSpu = boolean;
-    }
+    },
+    // 修改isShowAddSku的值，切换组件
+    toggleAddSKU(boolean) {
+      this.isShowAddSku = boolean;
+    },
   },
   components: {
     Category,
     AllSpu,
     EachSpu,
+    AddSku,
   },
   mounted() {
-    // 绑定事件传递categoryId
-    // 当点击了三级分类列表时，触发该事件把数据传过来
-    this.$bus.$on("deliverCategoryId", this.deliverCategoryId);
     // 绑定一个修改isShowAddSpu值的函数
-    this.$bus.$on("toggle", this.toggle);
+    this.$bus.$on("toggleAddSPU", this.toggleAddSPU);
+    // 绑定一个修改isShowAddSpu值的函数
+    this.$bus.$on("toggleAddSKU", this.toggleAddSKU);
   },
   beforeDestroy() {
-    this.$bus.$off("deliverCategoryId", this.deliverCategoryId);
-    this.$bus.$off("toggle", this.toggle);
+    this.$bus.$off("toggleAddSPU", this.toggleAddSPU);
+    this.$bus.$off("toggleAddSKU", this.toggleAddSKU);
   },
 };
 </script>

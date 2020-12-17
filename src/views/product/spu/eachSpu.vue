@@ -137,6 +137,7 @@
   5.表单校验
 
 */
+import { mapActions, mapState } from "vuex";
 export default {
   name: "EachSpu",
   data() {
@@ -199,22 +200,14 @@ export default {
     eachSpuInfoProps: {
       type: Object,
     },
-    categoryId: {
-      type: Object,
-    },
   },
   computed: {
-    // 品牌列表中的第一个品牌的id
-    // firstTrademarkId: {
-    //   get() {
-    //     return this.eachSpuInfo ? this.eachSpuInfo.tmId : "";
-    //   },
-    //   set() {},
-    // },
-    // 还有几项选择
     leftHowMany() {
       return this.baseSaleAttrList.length;
     },
+    ...mapState({
+      categoryId: (state) => state.category.categoryId,
+    }),
   },
   methods: {
     // 点击保存时进行校验
@@ -244,9 +237,7 @@ export default {
             console.log("添加");
             await this.$API.spu.saveSpuInfo(data);
           }
-          this.$bus.$emit("toggle", true);
-          this.$emit("cancelSave", [], this.categoryId);
-          this.eachSpuInfo = {};
+          this.$bus.$emit("toggleAddSPU", true);
         }
       });
     },
@@ -382,10 +373,7 @@ export default {
         3.所有spu信息仍要渲染在allSpu组件中
           1.重新挂载，所有又会变成空数组；重新挂载时allSpu信息要保留
       */
-      // this.eachSpuInfoProps.id = undefined;
-      this.$bus.$emit("toggle", true);
-      this.$emit("cancelSave", [], this.categoryId);
-      this.eachSpuInfo = {};
+      this.$bus.$emit("toggleAddSPU", true);
     },
     // 上传图片
     handleRemove(res, file, fileList) {

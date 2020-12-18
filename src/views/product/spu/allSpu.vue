@@ -224,7 +224,6 @@ export default {
   mounted() {
     // 绑定事件
     //从eachSpu跳到这个页面时，要重新请求
-    // this.$bus.$on("fromCategory", this.fromCategory);
     const { current, size, categoryId } = this;
     this.myGetAllSpuInfoList({
       current,

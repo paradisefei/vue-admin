@@ -13,4 +13,12 @@ export default {
       method: 'GET',
     })
   },
+  // 保存sku
+  saveSkuInfo(data) {
+    return request({
+      url: `${api_name}/saveSkuInfo`,
+      method: 'POST',
+      data,
+    })
+  },
 }

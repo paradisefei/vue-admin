@@ -63,8 +63,7 @@
         >
         <!--
             1.点击添加销售属性
-              1.
-           -->
+        -->
         <el-table :data="spuAttrValueListInTable" border class="elButton">
           <el-table-column type="index" label="序号" width="100" align="center">
           </el-table-column>
@@ -319,16 +318,10 @@ export default {
     },
     // 添加属性值
     addSaleAttrValue(row) {
-      /*
-        1.
-      */
       this.$set(row, "edit", true);
       this.$nextTick(() => {
         this.$refs.input.focus();
       });
-      // row.spuSaleAttrValueList.push({
-      //   saleAttrValueName: this.spuSaleAttrValueList,
-      // });
     },
     // 上传之后会来到这个函数
     handleAvatarSuccess(res, file) {
@@ -342,7 +335,6 @@ export default {
         url: res.data,
         // spuId: this.eachSpuInfo.id,
       });
-      // this.ruleForm.logoUrl = res.data;
     },
     //  上传前
     beforeAvatarUpload(file) {

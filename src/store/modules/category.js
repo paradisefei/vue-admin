@@ -1,8 +1,6 @@
 import { Message } from "element-ui";
 import attr from "@/api/product/attr.js";
 
-// console.log(Message);
-// console.log(attr);
 /*
   1.页面挂载成功时，请求一级分类列表数据
     1.categoryId
